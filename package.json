@@ -1,56 +1,69 @@
 {
-  "name": "vite-plugin-qiankun",
-  "version": "1.0.15",
-  "description": "vite for qiankun",
-  "module": "es/index.js",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "rollup -c scripts/rollup.config.js",
-    "example:install": "cd example/main && npm install && cd ../viteapp && npm install && cd ../vue && npm install && cd ../react18 && npm install && cd ../vue3sub && npm install",
-    "example:start": "npm run build && cd example/viteapp && npm run build && cd ../../ && npm-run-all --parallel start:main start:viteapp start:vue start:react18dev start:vue3sub",
-    "example:start-vite-dev": "npm run build && npm-run-all --parallel start:main start:vitedev start:vue start:react18dev start:vue3sub",
-    "start:main": "cd example/main && npm run start",
-    "start:viteapp": "cd example/viteapp && npm run start",
-    "start:vitedev": "cd example/viteapp && npm run dev",
-    "start:react18dev": "cd example/react18 && npm run dev",
-    "start:vue3sub": "cd example/vue3sub && npm run dev",
-    "start:vue": "cd example/vue && npm run start",
-    "vite:test": "npm run build && cd example/viteapp && npm run dev"
-  },
+  "name": "@tiny-codes/vite-plugin-qiankun",
+  "version": "2.0.0",
+  "description": "vite for qiankun. This is a forked version of vite-plugin-qiankun.",
   "keywords": [
     "qiankun",
     "vite",
     "esm",
     "esModule"
   ],
-  "files": [
-    "dist",
-    "es"
-  ],
-  "homepage": "https://github.com/tengmaoqing/vite-plugin-qiankun",
-  "author": "markteng",
+  "homepage": "https://github.com/shijistar/vite-plugin-qiankun",
+  "bugs": {
+    "url": "https://github.com/shijistar/vite-plugin-qiankun/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shijistar/vite-plugin-qiankun.git"
+  },
   "license": "MIT",
+  "author": "李凤宝(Leo) <shijistar@gmail.com>",
+  "sideEffects": false,
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "es",
+    "LICENSE",
+    "CHANGELOG.md",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "scripts": {
+    "build": "run-s build-task",
+    "build-task": "father build",
+    "example:install": "cd example/main && npm install && cd ../viteapp && npm install && cd ../vue && npm install && cd ../react18 && npm install && cd ../vue3sub && npm install",
+    "example:start": "npm run build && cd example/viteapp && npm run build && cd ../../ && npm-run-all --parallel start:main start:viteapp start:vue start:react18dev start:vue3sub",
+    "example:start-vite-dev": "npm run build && npm-run-all --parallel start:main start:vitedev start:vue start:react18dev start:vue3sub",
+    "init-husky": "husky",
+    "prepare": "run-s init-husky",
+    "prepublishOnly": "run-s build",
+    "start:main": "cd example/main && npm run start",
+    "start:react18dev": "cd example/react18 && npm run dev",
+    "start:viteapp": "cd example/viteapp && npm run start",
+    "start:vitedev": "cd example/viteapp && npm run dev",
+    "start:vue": "cd example/vue && npm run start",
+    "start:vue3sub": "cd example/vue3sub && npm run dev",
+    "vite:test": "npm run build && cd example/viteapp && npm run dev"
+  },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.10"
+    "cheerio": "^1.0.0"
   },
   "devDependencies": {
-    "@types/jsdom": "^16.2.10",
-    "@typescript-eslint/eslint-plugin": "^4.29.1",
-    "@typescript-eslint/parser": "^4.29.1",
-    "eslint": "^7.32.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.24.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0",
-    "npm-run-all": "^4.1.5",
-    "rollup": "^2.73.0",
-    "rollup-plugin-typescript2": "^0.30.0",
-    "typescript": "^4.6.4",
+    "@tiny-codes/code-style-all-in-one": "^2.0.0",
+    "@types/node": "^22.19.15",
+    "father": "^4.6.17",
+    "npm-run-all2": "^8.0.4",
+    "qiankun": "^2.10.16",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "vite": "^2.9.9"
   },
   "peerDependencies": {
-    "typescript": ">=4",
-    "vite": ">=2"
+    "vite": "^2.0.0 | ^3.0.0 | ^4.0.0 | ^5.0.0 | ^6.0.0 | ^7.0.0 | ^8.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }

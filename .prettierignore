@@ -1,0 +1,9 @@
+.DS_Store
+coverage
+.yalc
+yalc-lock.json
+
+node_modules
+lib
+es
+umd

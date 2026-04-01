@@ -1,124 +1,164 @@
-import cheerio, { CheerioAPI, Element } from 'cheerio'
-import { PluginOption } from 'vite'
+import type { CheerioAPI } from 'cheerio';
+import { load } from 'cheerio';
+import type { Element } from 'domhandler';
+import type { PluginOption } from 'vite';
+import { detectIndent, space } from './utils';
 
-const createQiankunHelper = (qiankunName: string) => `
-  const createDeffer = (hookName) => {
-    const d = new Promise((resolve, reject) => {
-      window.proxy && (window.proxy[\`vite\${hookName}\`] = resolve)
-    })
-    return props => d.then(fn => fn(props));
-  }
-  const bootstrap = createDeffer('bootstrap');
-  const mount = createDeffer('mount');
-  const unmount = createDeffer('unmount');
-  const update = createDeffer('update');
+export * from './helper';
 
-  ;(global => {
-    global.qiankunName = '${qiankunName}';
-    global['${qiankunName}'] = {
-      bootstrap,
-      mount,
-      unmount,
-      update
-    };
-  })(window);
-`
-
-// eslint-disable-next-line no-unused-vars
-const replaceSomeScript = ($: CheerioAPI, findStr: string, replaceStr: string = '') => {
-  $('script').each((i, el) => {
-    if ($(el).html()?.includes(findStr)) {
-      $(el).html(replaceStr)
-    }
-  })
+export interface MicroOption {
+  /**
+   * Whether to change the origin of entry script tag for micro frontend. It's useful when the micro
+   * frontend is deployed on a different domain or path.
+   *
+   * > If the origin by the qiankun's default algorithm is not correct for you, please try the
+   * > [getPublicPath](https://qiankun.umijs.org/zh/api) option.
+   *
+   * @default true
+   */
+  changeScriptOrigin?: boolean;
 }
+type PluginFn = (appName: string, pluginOptions?: MicroOption) => PluginOption;
 
-const createImportFinallyResolve = (qiankunName: string) => {
-  return `
-    const qiankunLifeCycle = window.moudleQiankunAppLifeCycles && window.moudleQiankunAppLifeCycles['${qiankunName}'];
-    if (qiankunLifeCycle) {
-      window.proxy.vitemount((props) => qiankunLifeCycle.mount(props));
-      window.proxy.viteunmount((props) => qiankunLifeCycle.unmount(props));
-      window.proxy.vitebootstrap(() => qiankunLifeCycle.bootstrap());
-      window.proxy.viteupdate((props) => qiankunLifeCycle.update(props));
-    }
-  `
-}
-
-export type MicroOption = {
-  useDevMode?: boolean
-}
-type PluginFn = (qiankunName: string, microOption?: MicroOption) => PluginOption;
-
-const htmlPlugin: PluginFn = (qiankunName, microOption = {}) => {
-  let isProduction: boolean
-  let base = ''
-
-  const module2DynamicImport = ($: CheerioAPI, scriptTag: Element) => {
-    if (!scriptTag) {
-      return
-    }
-    const script$ = $(scriptTag)
-    const moduleSrc = script$.attr('src')
-    let appendBase = ''
-    if (microOption.useDevMode && !isProduction) {
-      appendBase = '(window.proxy ? (window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ + \'..\') : \'\') + '
-    }
-    script$.removeAttr('src')
-    script$.removeAttr('type')
-    script$.html(`import(${appendBase}'${moduleSrc}')`)
-    return script$
-  }
+/**
+ * Vite plugin for integrating with Qiankun micro frontend.
+ *
+ * @param appName The name of the Qiankun sub app.
+ * @param pluginOptions Options for configuring the micro frontend behavior.
+ *
+ * > If the micro app is deployed on a different domain or path, you may need to adjust the public
+ *   > path. Please have a look at the [getPublicPath](https://qiankun.umijs.org/zh/api) option.
+ *
+ * @returns A Vite plugin option object.
+ */
+const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
+  const { changeScriptOrigin = true } = pluginOptions;
 
   return {
-    name: 'qiankun-html-transform',
-    configResolved (config) {
-      isProduction = config.command === 'build' || config.isProduction
-      base = config.base
-    },
+    name: 'vite-plugin-qiankun',
 
-    configureServer (server) {
+    transformIndexHtml(html: string, context) {
+      const $ = load(html, { sourceCodeLocationInfo: true });
+      const entryScript =
+        $('script[entry]').get(0) ?? $('body script[type=module], head script[crossorigin=""]').get(0);
+      if (entryScript) {
+        const scriptBaseIndent = detectIndent(html, entryScript);
+        const S0 = scriptBaseIndent;
+        const S1 = scriptBaseIndent + space(2);
+        const S2 = S1 + space(2);
+        const script$ = module2DynamicImport({
+          $,
+          scriptTag: entryScript,
+          changeScriptOrigin,
+          ident: S1,
+        });
+        script$?.html(`${script$.html()?.trimEnd()}.finally(() => {
+${S2}${createImportFinallyResolve(appName, { indent: S2 }).trim()}
+${S1}});
+${S0}`);
+
+        const bodyBaseIndent = detectIndent(html, $('body').get(0));
+        const B1 = bodyBaseIndent + space(2);
+        const B2 = B1 + space(2);
+        $('body').append(`
+${B1}<script>
+${B2}${createQiankunHelper(appName, { indent: B2 + space(2) }).trim()}
+${B1}</script>
+`);
+        const output = $.html();
+        return output;
+      } else {
+        console.warn('\x1b[33m%s\x1b[0m', '⚠️ Patch for qiankun failed, because the entry script was not found.');
+        return html;
+      }
+    },
+    configureServer(server) {
+      const base = server.config.base;
       return () => {
-        server.middlewares.use((req, res, next) => {
-          if (isProduction || !microOption.useDevMode) {
-            next()
-            return
-          }
-          const end = res.end.bind(res)
-          res.end = (...args: any[]) => {
-            let [htmlStr, ...rest] = args
-            if (typeof htmlStr === 'string') {
-              const $ = cheerio.load(htmlStr)
-              module2DynamicImport($, $(`script[src=${base}@vite/client]`).get(0))
-              htmlStr = $.html()
-            }
-            end(htmlStr, ...rest)
-          }
-          next()
-        })
-      }
+        const patchFiles = [`${base}@vite/client`];
+        patchFiles.forEach((file) => {
+          server.middlewares.use(file, (req, res, next) => {
+            const end = res.end.bind(res);
+            res.end = function (this: typeof res, chunk: unknown, ...rest: any[]) {
+              if (typeof chunk === 'string') {
+                const $ = load(chunk);
+                module2DynamicImport({ $, scriptTag: $(`script[src="${file}"]`).get(0), changeScriptOrigin });
+                chunk = $.html();
+              }
+              end(chunk, ...rest);
+              return this;
+            } as unknown as typeof res.end;
+            next();
+          });
+        });
+      };
     },
-    transformIndexHtml (html: string) {
-      const $ = cheerio.load(html)
-      const moduleTags = $('body script[type=module], head script[crossorigin=""]')
-      if (!moduleTags || !moduleTags.length) {
-        return
-      }
-      const len = moduleTags.length
-      moduleTags.each((i, moduleTag) => {
-        const script$ = module2DynamicImport($, moduleTag)
-        if (len - 1 === i) {
-          script$?.html(`${script$.html()}.finally(() => {
-            ${createImportFinallyResolve(qiankunName)}
-          })`)
-        }
-      })
+  };
+};
 
-      $('body').append(`<script>${createQiankunHelper(qiankunName)}</script>`)
-      const output = $.html()
-      return output
-    }
+function module2DynamicImport(
+  options: { $: CheerioAPI; scriptTag: Element | undefined; ident?: string } & Pick<MicroOption, 'changeScriptOrigin'>,
+) {
+  const { $, scriptTag, changeScriptOrigin, ident = '' } = options;
+  if (!scriptTag) {
+    return;
   }
+  const script$ = $(scriptTag);
+  const moduleSrc = script$.attr('src');
+  let appendBase = "''";
+  if (changeScriptOrigin) {
+    appendBase = "window.proxy ? window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || '' : ''";
+  }
+  script$.removeAttr('src');
+  script$.removeAttr('type');
+  const space = ident;
+  script$.html(`
+${space}const publicUrl = ${appendBase};
+${space}let assetUrl = '${moduleSrc}';
+${space}if (!assetUrl.match(/^https?/i)) {
+${space}  assetUrl = publicUrl + assetUrl;
+${space}}
+${space}import(assetUrl)`);
+  return script$;
 }
 
-export default htmlPlugin
+function createImportFinallyResolve(qiankunName: string, options?: { indent?: string }) {
+  const { indent: space = '      ' } = options ?? {};
+  return `
+${space}const qiankunLifeCycle = window.moudleQiankunAppLifeCycles && window.moudleQiankunAppLifeCycles['${qiankunName}'];
+${space}if (qiankunLifeCycle) {
+${space}  window.proxy.vitemount((props) => qiankunLifeCycle.mount(props));
+${space}  window.proxy.viteunmount((props) => qiankunLifeCycle.unmount(props));
+${space}  window.proxy.vitebootstrap(() => qiankunLifeCycle.bootstrap());
+${space}  window.proxy.viteupdate((props) => qiankunLifeCycle.update(props));
+${space}}
+`;
+}
+
+function createQiankunHelper(qiankunName: string, options?: { indent?: string }) {
+  const { indent: space = '      ' } = options ?? {};
+  return `
+${space}const createDeffer = (hookName) => {
+${space}  const d = new Promise((resolve, reject) => {
+${space}    window.proxy && (window.proxy[\`vite\${hookName}\`] = resolve)
+${space}  })
+${space}  return props => d.then(fn => fn(props));
+${space}}
+${space}const bootstrap = createDeffer('bootstrap');
+${space}const mount = createDeffer('mount');
+${space}const unmount = createDeffer('unmount');
+${space}const update = createDeffer('update');
+
+${space};(global => {
+${space}  global.qiankunName = '${qiankunName}';
+${space}  global['${qiankunName}'] = {
+${space}    bootstrap,
+${space}    mount,
+${space}    unmount,
+${space}    update
+${space}  };
+${space}})(window);
+`;
+}
+
+export default qiankunPlugin;
