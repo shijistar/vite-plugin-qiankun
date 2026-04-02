@@ -1,6 +1,6 @@
 {
   "name": "@tiny-codes/vite-plugin-qiankun",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "vite for qiankun. This is a forked version of vite-plugin-qiankun.",
   "keywords": [
     "qiankun",
@@ -61,7 +61,8 @@
     "vite": "^2.9.9"
   },
   "peerDependencies": {
-    "vite": "^2.0.0 | ^3.0.0 | ^4.0.0 | ^5.0.0 | ^6.0.0 | ^7.0.0 | ^8.0.0"
+    "rolldown": "^1.0.0-rc.9",
+    "vite": ">=8.0.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

@@ -29,3 +29,12 @@ export function detectIndent(html: string, entryScript: Element | undefined) {
 export function space(num: number) {
   return new Array(num + 1).join(' ');
 }
+
+export function normalizeUrl(url: string | undefined, options?: { changeScriptOrigin?: boolean }) {
+  const { changeScriptOrigin = true } = options ?? {};
+  let appendBase = "''";
+  if (changeScriptOrigin) {
+    appendBase = "window.proxy?.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
+  }
+  return url?.match(/^https?/i) ? `'${url}'` : `(${appendBase}) + '${url}'`;
+}

@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.0.1
+
+2024-4-2
+
+### Features
+
+- Support `development` mode by default without any configuration.
+
 ## v2.0.0
 
 2024-4-1

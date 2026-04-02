@@ -2,7 +2,7 @@ import type { CheerioAPI } from 'cheerio';
 import { load } from 'cheerio';
 import type { Element } from 'domhandler';
 import type { PluginOption } from 'vite';
-import { detectIndent, space } from './utils';
+import { detectIndent, normalizeUrl, space } from './utils';
 
 export * from './helper';
 
@@ -39,6 +39,7 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
 
     transformIndexHtml(html: string, context) {
       const $ = load(html, { sourceCodeLocationInfo: true });
+      // Transform entry script
       const entryScript =
         $('script[entry]').get(0) ?? $('body script[type=module], head script[crossorigin=""]').get(0);
       if (entryScript) {
@@ -57,12 +58,40 @@ ${S2}${createImportFinallyResolve(appName, { indent: S2 }).trim()}
 ${S1}});
 ${S0}`);
 
+        // Transform @react-refresh script
+        if (context.server?.config.command === 'serve') {
+          const scripts = $('head script[type=module]').toArray();
+          const refreshScript = scripts.find((s) => /@react-refresh";$/m.test($(s).html() ?? ''));
+          if (refreshScript) {
+            const refreshScript$ = $(refreshScript);
+            const R1 = detectIndent(html, refreshScript) + space(2);
+            const content = refreshScript$.html();
+            const regExp = /import\s*{\s*injectIntoGlobalHook\s*}\s*from\s*"([^"]*@react-refresh)";/m;
+            const match = content?.match(regExp);
+            if (content && match) {
+              const sentence = match[0];
+              const from = match[1];
+              const rest = content.replace(sentence, '');
+              refreshScript$.removeAttr('type');
+              refreshScript$.html(`
+${R1}import(${normalizeUrl(from, { changeScriptOrigin })}).then(({ injectIntoGlobalHook }) => {
+${R1}  ${rest
+                .split('\n')
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .join(`\n${R1}  `)}
+${R1}});`);
+            }
+          }
+        }
+
+        // Add extra script to export lifecycles
         const bodyBaseIndent = detectIndent(html, $('body').get(0));
         const B1 = bodyBaseIndent + space(2);
         const B2 = B1 + space(2);
         $('body').append(`
 ${B1}<script>
-${B2}${createQiankunHelper(appName, { indent: B2 + space(2) }).trim()}
+${B2}${createQiankunHelper(appName, { indent: B2 })}
 ${B1}</script>
 `);
         const output = $.html();
@@ -75,21 +104,19 @@ ${B1}</script>
     configureServer(server) {
       const base = server.config.base;
       return () => {
-        const patchFiles = [`${base}@vite/client`];
-        patchFiles.forEach((file) => {
-          server.middlewares.use(file, (req, res, next) => {
-            const end = res.end.bind(res);
-            res.end = function (this: typeof res, chunk: unknown, ...rest: any[]) {
-              if (typeof chunk === 'string') {
-                const $ = load(chunk);
-                module2DynamicImport({ $, scriptTag: $(`script[src="${file}"]`).get(0), changeScriptOrigin });
-                chunk = $.html();
-              }
-              end(chunk, ...rest);
-              return this;
-            } as unknown as typeof res.end;
-            next();
-          });
+        // Only apply to / i.e. the mount point of the app
+        server.middlewares.use((req, res, next) => {
+          const end = res.end.bind(res);
+          res.end = function (this: typeof res, chunk: unknown, ...rest: any[]) {
+            if (typeof chunk === 'string') {
+              const $ = load(chunk);
+              module2DynamicImport({ $, scriptTag: $(`script[src="${base}@vite/client"]`).get(0), changeScriptOrigin });
+              chunk = $.html();
+            }
+            end(chunk, ...rest);
+            return this;
+          } as unknown as typeof res.end;
+          next();
         });
       };
     },
@@ -105,20 +132,11 @@ function module2DynamicImport(
   }
   const script$ = $(scriptTag);
   const moduleSrc = script$.attr('src');
-  let appendBase = "''";
-  if (changeScriptOrigin) {
-    appendBase = "window.proxy ? window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || '' : ''";
-  }
   script$.removeAttr('src');
   script$.removeAttr('type');
   const space = ident;
   script$.html(`
-${space}const publicUrl = ${appendBase};
-${space}let assetUrl = '${moduleSrc}';
-${space}if (!assetUrl.match(/^https?/i)) {
-${space}  assetUrl = publicUrl + assetUrl;
-${space}}
-${space}import(assetUrl)`);
+${space}import(${normalizeUrl(moduleSrc, { changeScriptOrigin })})`);
   return script$;
 }
 
@@ -143,13 +161,13 @@ ${space}  const d = new Promise((resolve, reject) => {
 ${space}    window.proxy && (window.proxy[\`vite\${hookName}\`] = resolve)
 ${space}  })
 ${space}  return props => d.then(fn => fn(props));
-${space}}
+${space}};
 ${space}const bootstrap = createDeffer('bootstrap');
 ${space}const mount = createDeffer('mount');
 ${space}const unmount = createDeffer('unmount');
 ${space}const update = createDeffer('update');
 
-${space};(global => {
+${space}(global => {
 ${space}  global.qiankunName = '${qiankunName}';
 ${space}  global['${qiankunName}'] = {
 ${space}    bootstrap,
@@ -157,8 +175,7 @@ ${space}    mount,
 ${space}    unmount,
 ${space}    update
 ${space}  };
-${space}})(window);
-`;
+${space}})(window);`.trimStart();
 }
 
 export default qiankunPlugin;

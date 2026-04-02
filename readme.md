@@ -6,7 +6,6 @@
 - 一键配置，不影响已有的vite配置
 - 支持vite开发环境
 
-
 forked from [vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qiankun)
 
 ## 快速开始
@@ -21,7 +20,7 @@ export default {
   // 这里的 'myMicroAppName' 是子应用名，主应用注册时AppName需保持一致
   plugins: [
     // ...
-    qiankun('subApp')
+    qiankun('subApp'),
   ],
 };
 ```
@@ -54,27 +53,7 @@ if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
 }
 ```
 
-### 3、dev下作为子应用调试
-
-> 因为开发环境作为子应用时与热更新插件（可能与其他修改html的插件也会存在冲突）有冲突，所以需要额外的调试配置
-
-```typescript
-// useDevMode 开启时与热更新插件冲突,使用变量切换
-const useDevMode = true;
-
-const baseConfig: UserConfig = {
-  plugins: [
-    ...(useDevMode ? [] : [reactRefresh()]),
-    qiankun('viteapp', {
-      useDevMode,
-    }),
-  ],
-};
-```
-
-上面例子中 `useDevMode = true` 则不使用热更新插件，`useDevMode = false` 则能使用热更新，但无法作为子应用加载。
-
-### 4、子应用部署到不同的域名
+### 3、子应用部署到不同的域名
 
 如果子应用与主应用部署的域名不同，并且子应用的`base`是相对路径（例如`/sub-app/`），此时很可能子应用会加载失败。子应用的入口 script 标签可能类似于 `/sub-app/index.js`，qiankun会尝试在主应用域名下加载该资源，当然会失败。
 
@@ -93,6 +72,10 @@ loadMicroApp(
   },
 );
 ```
+
+### 4、显式指定入口文件
+
+qiankun会默认取最后一个 `script` 标签作为子应用的入口文件，但如果由于特殊原因不能把入口文件放到最后，也可以显式指定入口文件，在script标签上添加 `entry` 属性即可，详情参考[官方文档](https://qiankun.umijs.org/zh/faq)。
 
 ### 5、其它使用注意点 `qiankunWindow`
 
