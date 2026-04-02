@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## UNRELEASED
+
+2024-4-3
+
+### Features
+
+- Enhance module preloading to support cross-origin.
+
 ## v2.0.1
 
 2024-4-2

@@ -58,6 +58,29 @@ ${S2}${createImportFinallyResolve(appName, { indent: S2 }).trim()}
 ${S1}});
 ${S0}`);
 
+        // Transform modulepreload links
+        const preloadLinks = $('link[rel="modulepreload"]');
+        if (preloadLinks.length) {
+          const urls = preloadLinks.map((_, link) => $(link).attr('href')).get();
+          const P1 = detectIndent(html, preloadLinks.get(0));
+          preloadLinks.last().after(`
+${P1}<script>
+${P1}  const preloadUrls = [
+${urls.map((url) => `${P1}    ${normalizeUrl(url, { changeScriptOrigin })}`).join(',\n')}
+${P1}  ];
+${P1}  preloadUrls.forEach((url) => {
+${P1}    const link = document.createElement('link');
+${P1}    link.rel = 'modulepreload';
+${P1}    link.href = url;
+${P1}    link.crossOrigin = 'anonymous';
+${P1}    document.head.appendChild(link);
+${P1}  });
+${P1}</script>`);
+          const texts = preloadLinks.map((_, link) => (link.next?.type === 'text' ? link.next : null));
+          texts.remove();
+          preloadLinks.remove();
+        }
+
         // Transform @react-refresh script
         if (context.server?.config.command === 'serve') {
           const scripts = $('head script[type=module]').toArray();

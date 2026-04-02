@@ -1,19 +1,19 @@
 import type { Element } from 'domhandler';
 
-export function detectIndent(html: string, entryScript: Element | undefined) {
+export function detectIndent(html: string, element: Element | undefined) {
   let baseIndent = '';
-  if (entryScript?.sourceCodeLocation) {
+  if (element?.sourceCodeLocation) {
     const newline = html.includes('\r\n') ? '\r\n' : '\n';
     const lines = html.split(newline);
-    const lineStr = lines[entryScript.sourceCodeLocation.startLine - 1];
+    const lineStr = lines[element.sourceCodeLocation.startLine - 1];
     if (lineStr) {
-      const startTag = '<script';
+      const startTag = `<${element.tagName}`;
       const tagNameFromHtml = lineStr.substring(
-        entryScript.sourceCodeLocation.startCol - 1,
-        entryScript.sourceCodeLocation.startCol - 1 + startTag.length,
+        element.sourceCodeLocation.startCol - 1,
+        element.sourceCodeLocation.startCol - 1 + startTag.length,
       );
       if (tagNameFromHtml === startTag) {
-        for (let i = 0; i < entryScript.sourceCodeLocation.startCol - 1; i++) {
+        for (let i = 0; i < element.sourceCodeLocation.startCol - 1; i++) {
           if (/\s/.test(lineStr[i])) {
             baseIndent += lineStr[i];
           } else {
@@ -34,7 +34,7 @@ export function normalizeUrl(url: string | undefined, options?: { changeScriptOr
   const { changeScriptOrigin = true } = options ?? {};
   let appendBase = "''";
   if (changeScriptOrigin) {
-    appendBase = "window.proxy?.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
+    appendBase = "window.proxy && window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
   }
   return url?.match(/^https?/i) ? `'${url}'` : `(${appendBase}) + '${url}'`;
 }
