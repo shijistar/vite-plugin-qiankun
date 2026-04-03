@@ -1,45 +1,41 @@
-import React from 'react'
-import ReactDOM, { Root } from 'react-dom/client'
-import App from './App'
-import './index.css'
-import { renderWithQiankun, qiankunWindow } from "../../../es/helper";
+import React from 'react';
+import ReactDOM, { Root } from 'react-dom/client';
+import { exportQiankunLifeCycles, qiankunWindow } from '../../../es/helper';
+import App from './App';
+import './index.css';
 
 let root: Root;
 console.log(React);
 
 function render(props: any) {
   const { container } = props;
-  root = ReactDOM.createRoot(container
-    ? container.querySelector("#root")
-    : document.getElementById("root"))
-    
+  root = ReactDOM.createRoot(container ? container.querySelector('#root') : document.getElementById('root'));
+
   root.render(
     <React.StrictMode>
       <App />
-    </React.StrictMode>
-  )
+    </React.StrictMode>,
+  );
 }
 
-renderWithQiankun({
+exportQiankunLifeCycles({
   mount(props) {
-    console.log("react18 mount");
+    console.log('react18 mount');
     render(props);
   },
   bootstrap() {
-    console.log("bootstrap");
+    console.log('bootstrap');
   },
   unmount(props: any) {
-    console.log("react18 unmount");
+    console.log('react18 unmount');
     root.unmount();
   },
   update(props: any) {
-    console.log("react18 update");
-    console.log(props)
+    console.log('react18 update');
+    console.log(props);
   },
 });
 
 if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
   render({});
 }
-
-

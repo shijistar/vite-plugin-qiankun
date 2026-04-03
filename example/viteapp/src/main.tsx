@@ -1,10 +1,9 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-
+import React from 'react';
+import ReactDOM from 'react-dom';
 // vite-plugin-qiankun helper
-import { renderWithQiankun, qiankunWindow } from "../../../es/helper";
+import { exportQiankunLifeCycles, qiankunWindow } from '../../../es/helper';
+import App from './App';
+import './index.css';
 
 function render(props: any) {
   const { container } = props;
@@ -12,31 +11,27 @@ function render(props: any) {
     <React.StrictMode>
       <App />
     </React.StrictMode>,
-    container
-      ? container.querySelector("#root")
-      : document.getElementById("root")
+    container ? container.querySelector('#root') : document.getElementById('root'),
   );
 }
 
-renderWithQiankun({
+exportQiankunLifeCycles({
   mount(props) {
-    console.log("viteapp mount");
+    console.log('viteapp mount');
     render(props);
   },
   bootstrap() {
-    console.log("bootstrap");
+    console.log('bootstrap');
   },
   unmount(props: any) {
-    console.log("viteapp unmount");
+    console.log('viteapp unmount');
     const { container } = props;
-    const mountRoot = container?.querySelector("#root");
-    ReactDOM.unmountComponentAtNode(
-      mountRoot || document.querySelector("#root")
-    );
+    const mountRoot = container?.querySelector('#root');
+    ReactDOM.unmountComponentAtNode(mountRoot || document.querySelector('#root'));
   },
   update(props: any) {
-    console.log("viteapp update");
-    console.log(props)
+    console.log('viteapp update');
+    console.log(props);
   },
 });
 

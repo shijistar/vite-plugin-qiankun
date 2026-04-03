@@ -6,7 +6,7 @@
 - 一键配置，不影响已有的vite配置
 - 支持vite开发环境
 
-forked from [vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qiankun)
+Forked from [vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qiankun)
 
 ## 快速开始
 
@@ -17,7 +17,7 @@ forked from [vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qia
 import qiankun from '@tiny-codes/vite-plugin-qiankun';
 
 export default {
-  // 这里的 'myMicroAppName' 是子应用名，主应用注册时AppName需保持一致
+  // 这里的 subApp 是子应用名，主应用注册时 name 需保持一致
   plugins: [
     // ...
     qiankun('subApp'),
@@ -27,30 +27,34 @@ export default {
 
 ### 2、在入口文件里面写入乾坤的生命周期配置
 
-```typescript
+```ts
 // main.ts
-import { qiankunWindow, renderWithQiankun } from '@tiny-codes/vite-plugin-qiankun';
+import { qiankunWindow, exportQiankunLifeCycles } from '@tiny-codes/vite-plugin-qiankun';
 
-// some code
-renderWithQiankun({
-  mount(props) {
-    console.log('mount');
-    render(props);
-  },
-  bootstrap() {
-    console.log('bootstrap');
-  },
-  unmount(props: any) {
-    console.log('unmount');
-    const { container } = props;
-    const mountRoot = container?.querySelector('#root');
-    ReactDOM.unmountComponentAtNode(mountRoot || document.querySelector('#root'));
-  },
-});
+const root = createRoot(document.getElementById('root'));
 
-if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
-  render({});
+if (qiankunWindow.__POWERED_BY_QIANKUN__) {
+  exportQiankunLifeCycles({
+    bootstrap(props) {
+      console.log('bootstrap');
+    },
+    mount(props) {
+      console.log('mount');
+      root.render(<App/>);
+    },
+    unmount(props) {
+      console.log('unmount');
+      root.unmount();
+    },
+    update(props) {
+      console.log('update', props);
+    }
+  });
 }
+else {
+  root.render(<App/>);
+}
+
 ```
 
 ### 3、子应用部署到不同的域名
@@ -77,18 +81,45 @@ loadMicroApp(
 
 qiankun会默认取最后一个 `script` 标签作为子应用的入口文件，但如果由于特殊原因不能把入口文件放到最后，也可以显式指定入口文件，在script标签上添加 `entry` 属性即可，详情参考[官方文档](https://qiankun.umijs.org/zh/faq)。
 
-### 5、其它使用注意点 `qiankunWindow`
+### 5、全局事件
+
+本插件会在子应用加载完成后触发 `qiankun:loaded` 事件，在子应用入口脚本加载失败时触发 `qiankun:fetchEntryError` 事件，在子应用运行时发生错误时触发 `qiankun:runtimeError` 事件。可以通过监听这些事件来处理相应的逻辑，或在页面上显示相应的操作提示。
+
+```typescript
+window.addEventListener('qiankun:loaded', () => {
+  console.log('The sub-application has been loaded successfully.');
+});
+
+window.addEventListener('qiankun:fetchEntryError', (event) => {
+  console.error('The sub-application entry script failed to load', event.detail);
+  document.querySelector('#root').innerHTML = `
+If the main application is hosted on a different domain, make sure getPublicPath is configured to return the domain of sub app. For example:
+<pre>
+  loadMicroApp({ 
+    name: "subApp", 
+    entry: 'https://domain-to-subApp/pages'
+  }, { 
+    getPublicPath: () => "https://domain-to-subApp" 
+  });
+</pre>`;
+});
+
+window.addEventListener('qiankun:runtimeError', (event) => {
+  console.error('The sub-application runtime error occurred', event.detail);
+});
+```
+
+### 6、其它使用注意点 `qiankunWindow`
 
 因为 esm 模块加载与`qiankun`的实现方式有些冲突，所以使用本插件实现的`qiankun`微应用里面没有运行在js沙盒中。所以在不可避免需要设置window上的属性时，尽量显式地操作js沙盒，否则可能会对其它子应用产生副作用。qiankun沙盒对象的使用方式：
 
 ```typescript
 import { qiankunWindow } from '@tiny-codes/vite-plugin-qiankun';
 
-qiankunWindow.customxxx = 'ssss';
-
 if (qiankunWindow.__POWERED_BY_QIANKUN__) {
-  console.log('我正在作为子应用运行');
+  console.log('I am running as a sub-application');
 }
+qiankunWindow.foo = 'bar';
 ```
 
 ## 例子

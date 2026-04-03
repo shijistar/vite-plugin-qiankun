@@ -1,12 +1,15 @@
 # @tiny-codes/vite-plugin-qiankun
 
-## UNRELEASED
+## v2.0.2
 
 2024-4-3
 
 ### Features
 
 - Enhance module preloading to support cross-origin.
+- Add `qiankun:loaded` event to notify when micro app is fully loaded.
+- Add `qiankun:fetchEntryError` event to notify when fetching the entry script fails.
+- Add `qiankun:runtimeError` event to notify when a runtime error occurs.
 
 ## v2.0.1
 

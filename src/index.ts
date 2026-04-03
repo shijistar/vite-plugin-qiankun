@@ -43,20 +43,38 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
       const entryScript =
         $('script[entry]').get(0) ?? $('body script[type=module], head script[crossorigin=""]').get(0);
       if (entryScript) {
+        const url = entryScript.attribs.src;
         const scriptBaseIndent = detectIndent(html, entryScript);
         const S0 = scriptBaseIndent;
         const S1 = scriptBaseIndent + space(2);
-        const S2 = S1 + space(2);
         const script$ = module2DynamicImport({
           $,
           scriptTag: entryScript,
           changeScriptOrigin,
           ident: S1,
         });
-        script$?.html(`${script$.html()?.trimEnd()}.finally(() => {
-${S2}${createImportFinallyResolve(appName, { indent: S2 }).trim()}
+        script$?.html(
+          `${script$.html()?.trimEnd()}.then(() => {
+${S1}  if (window.proxy) {
+${S1}    const qiankunLifeCycle = window.proxy.qiankunLifeCycles;
+${S1}    if (qiankunLifeCycle) {
+${S1}      window.proxy.vpq_bootstrap((props) => qiankunLifeCycle.bootstrap && qiankunLifeCycle.bootstrap(props));
+${S1}      window.proxy.vpq_mount((props) => qiankunLifeCycle.mount && qiankunLifeCycle.mount(props));
+${S1}      window.proxy.vpq_unmount((props) => qiankunLifeCycle.unmount && qiankunLifeCycle.unmount(props));
+${S1}      window.proxy.vpq_update((props) => qiankunLifeCycle.update && qiankunLifeCycle.update(props));
+${S1}      window.dispatchEvent(new CustomEvent('qiankun:loaded'));
+${S1}    }
+${S1}  }
+${S1}}).catch((error) => {
+${S1}  console.error(error);
+${S1}  if (error.name === 'TypeError' && error.message && error.message.startsWith('Failed to fetch dynamically imported module:')) {
+${S1}    window.dispatchEvent(new CustomEvent('qiankun:fetchEntryError', { detail: { url: '${url}', error } }));
+${S1}  } else {
+${S1}    window.dispatchEvent(new CustomEvent('qiankun:runtimeError', { detail: { error } }));
+${S1}  }
 ${S1}});
-${S0}`);
+${S0}`,
+        );
 
         // Transform modulepreload links
         const preloadLinks = $('link[rel="modulepreload"]');
@@ -89,15 +107,16 @@ ${P1}</script>`);
             const refreshScript$ = $(refreshScript);
             const R1 = detectIndent(html, refreshScript) + space(2);
             const content = refreshScript$.html();
-            const regExp = /import\s*{\s*injectIntoGlobalHook\s*}\s*from\s*"([^"]*@react-refresh)";/m;
+            const regExp = /import\s*{([^}]*)}\s*from\s*"([^"]*@react-refresh)";/m;
             const match = content?.match(regExp);
             if (content && match) {
               const sentence = match[0];
-              const from = match[1];
+              const imports = match[1];
+              const from = match[2];
               const rest = content.replace(sentence, '');
               refreshScript$.removeAttr('type');
               refreshScript$.html(`
-${R1}import(${normalizeUrl(from, { changeScriptOrigin })}).then(({ injectIntoGlobalHook }) => {
+${R1}import(${normalizeUrl(from, { changeScriptOrigin })}).then(({${imports}}) => {
 ${R1}  ${rest
                 .split('\n')
                 .map((s) => s.trim())
@@ -114,7 +133,7 @@ ${R1}});`);
         const B2 = B1 + space(2);
         $('body').append(`
 ${B1}<script>
-${B2}${createQiankunHelper(appName, { indent: B2 })}
+${B2}${exportLifeCycles(appName, { indent: B2 })}
 ${B1}</script>
 `);
         const output = $.html();
@@ -163,42 +182,23 @@ ${space}import(${normalizeUrl(moduleSrc, { changeScriptOrigin })})`);
   return script$;
 }
 
-function createImportFinallyResolve(qiankunName: string, options?: { indent?: string }) {
+function exportLifeCycles(qiankunName: string, options?: { indent?: string }) {
   const { indent: space = '      ' } = options ?? {};
   return `
-${space}const qiankunLifeCycle = window.moudleQiankunAppLifeCycles && window.moudleQiankunAppLifeCycles['${qiankunName}'];
-${space}if (qiankunLifeCycle) {
-${space}  window.proxy.vitemount((props) => qiankunLifeCycle.mount(props));
-${space}  window.proxy.viteunmount((props) => qiankunLifeCycle.unmount(props));
-${space}  window.proxy.vitebootstrap(() => qiankunLifeCycle.bootstrap());
-${space}  window.proxy.viteupdate((props) => qiankunLifeCycle.update(props));
-${space}}
-`;
-}
-
-function createQiankunHelper(qiankunName: string, options?: { indent?: string }) {
-  const { indent: space = '      ' } = options ?? {};
-  return `
-${space}const createDeffer = (hookName) => {
-${space}  const d = new Promise((resolve, reject) => {
-${space}    window.proxy && (window.proxy[\`vite\${hookName}\`] = resolve)
+${space}const makeLifeCycle = (hookName) => {
+${space}  const promise = new Promise((resolve, reject) => {
+${space}    if (window.proxy) {
+${space}      window.proxy[\`vpq_\${hookName}\`] = resolve;
+${space}    }
 ${space}  })
-${space}  return props => d.then(fn => fn(props));
+${space}  return (props) => promise.then(fn => fn(props));
 ${space}};
-${space}const bootstrap = createDeffer('bootstrap');
-${space}const mount = createDeffer('mount');
-${space}const unmount = createDeffer('unmount');
-${space}const update = createDeffer('update');
-
-${space}(global => {
-${space}  global.qiankunName = '${qiankunName}';
-${space}  global['${qiankunName}'] = {
-${space}    bootstrap,
-${space}    mount,
-${space}    unmount,
-${space}    update
-${space}  };
-${space}})(window);`.trimStart();
+${space}window['${qiankunName}'] = {
+${space}  bootstrap: makeLifeCycle('bootstrap'),
+${space}  mount: makeLifeCycle('mount'),
+${space}  unmount: makeLifeCycle('unmount'),
+${space}  update: makeLifeCycle('update')
+${space}};`.trimStart();
 }
 
 export default qiankunPlugin;
