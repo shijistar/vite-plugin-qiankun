@@ -1,12 +1,14 @@
+# @tiny-codes/vite-plugin-qiankun
+
 ## 简介
 
-> `@tiny-codes/vite-plugin-qiankun`: 帮助应用快速接入乾坤的vite插件
+帮助vite8+应用快速接入乾坤框架
 
 - 保留vite构建es模块的优势
 - 一键配置，不影响已有的vite配置
 - 支持vite开发环境
 
-Forked from [vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qiankun)
+> Originally forked from [vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qiankun)
 
 ## 快速开始
 
