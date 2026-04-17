@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.0.3
+
+2024-4-17
+
+### Features
+
+- Update README
+
 ## v2.0.2
 
 2024-4-3
