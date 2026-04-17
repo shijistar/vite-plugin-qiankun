@@ -133,7 +133,20 @@ ${R1}});`);
         const B2 = B1 + space(2);
         $('body').append(`
 ${B1}<script>
-${B2}${exportLifeCycles(appName, { indent: B2 })}
+${B2}const makeLifeCycle = (hookName) => {
+${B2}  const promise = new Promise((resolve, reject) => {
+${B2}    if (window.proxy) {
+${B2}      window.proxy[\`vpq_\${hookName}\`] = resolve;
+${B2}    }
+${B2}  })
+${B2}  return (props) => promise.then(fn => fn(props));
+${B2}};
+${B2}window['${appName}'] = {
+${B2}  bootstrap: makeLifeCycle('bootstrap'),
+${B2}  mount: makeLifeCycle('mount'),
+${B2}  unmount: makeLifeCycle('unmount'),
+${B2}  update: makeLifeCycle('update')
+${B2}};
 ${B1}</script>
 `);
         const output = $.html();
@@ -180,25 +193,6 @@ function module2DynamicImport(
   script$.html(`
 ${space}import(${normalizeUrl(moduleSrc, { changeScriptOrigin })})`);
   return script$;
-}
-
-function exportLifeCycles(qiankunName: string, options?: { indent?: string }) {
-  const { indent: space = '      ' } = options ?? {};
-  return `
-${space}const makeLifeCycle = (hookName) => {
-${space}  const promise = new Promise((resolve, reject) => {
-${space}    if (window.proxy) {
-${space}      window.proxy[\`vpq_\${hookName}\`] = resolve;
-${space}    }
-${space}  })
-${space}  return (props) => promise.then(fn => fn(props));
-${space}};
-${space}window['${qiankunName}'] = {
-${space}  bootstrap: makeLifeCycle('bootstrap'),
-${space}  mount: makeLifeCycle('mount'),
-${space}  unmount: makeLifeCycle('unmount'),
-${space}  update: makeLifeCycle('update')
-${space}};`.trimStart();
 }
 
 export default qiankunPlugin;
