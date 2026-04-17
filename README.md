@@ -326,9 +326,3 @@ If the sub application does not load correctly, check these items first:
 3. Check whether the deployment is cross-origin and `getPublicPath` is missing or incorrect.
 4. Verify that the entry script is identified correctly. Add the `entry` attribute if needed.
 5. Check whether `qiankun:fetchEntryError` or `qiankun:runtimeError` has been emitted in the console.
-
-## Related Links
-
-- [中文](./README.zh-CN.md)
-- [Changelog](./CHANGELOG.md)
-- [qiankun Documentation](https://qiankun.umijs.org/)
