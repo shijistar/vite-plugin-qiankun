@@ -1,6 +1,8 @@
+[English](./README.md) | [中文](./README.zh-CN.md) | [Changelog](./CHANGELOG.md)
+
 # @tiny-codes/vite-plugin-qiankun
 
-[English](./README.md) | [中文](./README.zh-CN.md) | [Changelog](./CHANGELOG.md)
+![Vite compatibility](https://registry.vite.dev/api/badges?package=@tiny-codes/vite-plugin-qiankun&tool=vite)
 
 ## Overview
 

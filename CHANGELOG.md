@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.0.4
+
+2024-4-20
+
+### Features
+
+- Add `vite-plugin` keyword in package.json to improve discoverability.
+
 ## v2.0.3
 
 2024-4-17
