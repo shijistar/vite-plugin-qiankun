@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.0.6
+
+2024-4-28
+
+### Bug Fixes
+
+- Add timestamp to the entry script to prevent caching issues.
+
 ## v2.0.5
 
 2024-4-28

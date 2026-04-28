@@ -130,23 +130,22 @@ ${R1}});`);
         // Add extra script to export lifecycles
         const bodyBaseIndent = detectIndent(html, $('body').get(0));
         const B1 = bodyBaseIndent + space(2);
-        const B2 = B1 + space(2);
         $('body').append(`
 ${B1}<script>
-${B2}const makeLifeCycle = (hookName) => {
-${B2}  const promise = new Promise((resolve, reject) => {
-${B2}    if (window.proxy) {
-${B2}      window.proxy[\`vpq_\${hookName}\`] = resolve;
-${B2}    }
-${B2}  })
-${B2}  return (props) => promise.then(fn => fn(props));
-${B2}};
-${B2}window['${appName}'] = {
-${B2}  bootstrap: makeLifeCycle('bootstrap'),
-${B2}  mount: makeLifeCycle('mount'),
-${B2}  unmount: makeLifeCycle('unmount'),
-${B2}  update: makeLifeCycle('update')
-${B2}};
+${B1}  const makeLifeCycle = (hookName) => {
+${B1}    const promise = new Promise((resolve, reject) => {
+${B1}      if (window.proxy) {
+${B1}        window.proxy[\`vpq_\${hookName}\`] = resolve;
+${B1}      }
+${B1}    })
+${B1}    return (props) => promise.then(fn => fn(props));
+${B1}  };
+${B1}  window['${appName}'] = {
+${B1}    bootstrap: makeLifeCycle('bootstrap'),
+${B1}    mount: makeLifeCycle('mount'),
+${B1}    unmount: makeLifeCycle('unmount'),
+${B1}    update: makeLifeCycle('update')
+${B1}  };
 ${B1}</script>
 `);
         const output = $.html();
@@ -191,7 +190,7 @@ function module2DynamicImport(
   script$.removeAttr('type');
   const space = ident;
   script$.html(`
-${space}import(${normalizeUrl(moduleSrc, { changeScriptOrigin })})`);
+${space}import(${normalizeUrl(moduleSrc + `?${Date.now()}`, { changeScriptOrigin })})`);
   return script$;
 }
 
