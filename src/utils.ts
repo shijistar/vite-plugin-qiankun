@@ -36,5 +36,5 @@ export function normalizeUrl(url: string | undefined, options?: { changeScriptOr
   if (changeScriptOrigin) {
     appendBase = "window.proxy && window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
   }
-  return url?.match(/^https?/i) ? `'${url}'` : `(${appendBase}) + '${url}'`;
+  return url?.match(/^https?/i) ? `'${url}'` : `(${appendBase}).replace(/\\/$/, '') + '${url}'`;
 }

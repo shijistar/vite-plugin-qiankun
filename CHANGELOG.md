@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.0.5
+
+2024-4-28
+
+### Bug Fixes
+
+- Remove the trailing slash in `window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__`
+
 ## v2.0.4
 
 2024-4-20
