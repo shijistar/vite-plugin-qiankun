@@ -4,7 +4,7 @@ import type { Element } from 'domhandler';
 import type { PluginOption } from 'vite';
 import { detectIndent, normalizeUrl, space } from './utils';
 
-export * from './helper';
+export * from './client';
 
 export interface MicroOption {
   /**
@@ -57,16 +57,18 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
         });
         script$?.html(
           `${script$.html()?.trimEnd()}.then(() => {
+${S1}  if (!window.__POWERED_BY_QIANKUN__) return;
 ${S1}  const hooks = window[\`qiankunLifeCycles_${appName}\`];
 ${S1}  if (hooks) {
-${S1}    window[\`qiankun_bootstrap_${appName}\`]((props) => hooks.bootstrap && hooks.bootstrap(props));
-${S1}    window[\`qiankun_mount_${appName}\`]((props) => hooks.mount && hooks.mount(props));
-${S1}    window[\`qiankun_unmount_${appName}\`]((props) => hooks.unmount && hooks.unmount(props));
-${S1}    window[\`qiankun_update_${appName}\`]((props) => hooks.update && hooks.update(props));
+${S1}    window.document[Symbol.for(\`qiankun_bootstrap_${appName}\`)]((props) => hooks.bootstrap && hooks.bootstrap(props));
+${S1}    window.document[Symbol.for(\`qiankun_mount_${appName}\`)]((props) => hooks.mount && hooks.mount(props));
+${S1}    window.document[Symbol.for(\`qiankun_unmount_${appName}\`)]((props) => hooks.unmount && hooks.unmount(props));
+${S1}    window.document[Symbol.for(\`qiankun_update_${appName}\`)]((props) => hooks.update && hooks.update(props));
 ${S1}    window.dispatchEvent(new CustomEvent('qiankun:loaded'));
 ${S1}  }
 ${S1}}).catch((error) => {
 ${S1}  console.error(error);
+${S1}  if (!window.__POWERED_BY_QIANKUN__) return;
 ${S1}  if (error.name === 'TypeError' && error.message && error.message.startsWith('Failed to fetch dynamically imported module:')) {
 ${S1}    window.dispatchEvent(new CustomEvent('qiankun:fetchEntryError', { detail: { url: '${url}', error } }));
 ${S1}  } else {
@@ -81,18 +83,20 @@ ${S0}`,
         const B1 = bodyBaseIndent + space(2);
         const mainModuleScript = `
 ${B1}<script>
-${B1}  const makeLifeCycle = (hookName) => {
-${B1}    const p = new Promise((resolve, reject) => {
-${B1}      window[\`qiankun_\${hookName}_${appName}\`] = resolve;
-${B1}    });
-${B1}    return (props) => p.then(fn => fn(props));
-${B1}  };
-${B1}  window['${appName}'] = {
-${B1}    bootstrap: makeLifeCycle('bootstrap'),
-${B1}    mount: makeLifeCycle('mount'),
-${B1}    unmount: makeLifeCycle('unmount'),
-${B1}    update: makeLifeCycle('update')
-${B1}  };
+${B1}  if (window.__POWERED_BY_QIANKUN__) {
+${B1}    const makeLifeCycle = (hookName) => {
+${B1}      const p = new Promise((resolve, reject) => {
+${B1}        window.document[Symbol.for(\`qiankun_\${hookName}_${appName}\`)] = resolve;
+${B1}      });
+${B1}      return (props) => p.then(fn => fn(props));
+${B1}    };
+${B1}    window['${appName}'] = {
+${B1}      bootstrap: makeLifeCycle('bootstrap'),
+${B1}      mount: makeLifeCycle('mount'),
+${B1}      unmount: makeLifeCycle('unmount'),
+${B1}      update: makeLifeCycle('update')
+${B1}    };
+${B1}  }
 ${B1}</script>
 ${S0}`;
         if (entryScript) {

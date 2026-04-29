@@ -1,6 +1,6 @@
 {
   "name": "@tiny-codes/vite-plugin-qiankun",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Integrate qiankun micro-frontend framework with Vite 8+ applications",
   "keywords": [
     "vite",
@@ -66,6 +66,9 @@
   "peerDependencies": {
     "rolldown": "^1.0.0-rc.9",
     "vite": ">=8.0.0"
+  },
+  "optionalDependencies": {
+    "qiankun": "^2.9.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

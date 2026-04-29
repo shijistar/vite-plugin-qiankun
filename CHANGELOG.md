@@ -1,8 +1,18 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.2.0
+
+2026-4-30
+
+### Feature
+
+- Mount Qiankun internal helpers to the `document` object to prevent them from being overwritten when multiple micro apps are loaded in parallel. Now multiple micro apps can be loaded simultaneously without affecting each other.
+- Rename internal module `helpers.js` to `client.js`
+- Add `qiankun` package to `optionalDependencies`
+
 ## v2.1.2
 
-2024-4-29
+2026-4-29
 
 ### Feature
 
@@ -14,7 +24,7 @@
 
 ## v2.1.1
 
-2024-4-29
+2026-4-29
 
 ### Bug Fixes
 
@@ -22,7 +32,7 @@
 
 ## v2.1.0
 
-2024-4-29
+2026-4-29
 
 ### Features
 
@@ -36,7 +46,7 @@
 
 ## v2.0.6
 
-2024-4-28
+2026-4-28
 
 ### Bug Fixes
 
@@ -44,7 +54,7 @@
 
 ## v2.0.5
 
-2024-4-28
+2026-4-28
 
 ### Bug Fixes
 
@@ -52,7 +62,7 @@
 
 ## v2.0.4
 
-2024-4-20
+2026-4-20
 
 ### Features
 
@@ -60,7 +70,7 @@
 
 ## v2.0.3
 
-2024-4-17
+2026-4-17
 
 ### Features
 
@@ -68,7 +78,7 @@
 
 ## v2.0.2
 
-2024-4-3
+2026-4-3
 
 ### Features
 
@@ -79,7 +89,7 @@
 
 ## v2.0.1
 
-2024-4-2
+2026-4-2
 
 ### Features
 
@@ -87,7 +97,7 @@
 
 ## v2.0.0
 
-2024-4-1
+2026-4-1
 
 ### Features
 
@@ -97,6 +107,6 @@
 
 ## v1.0.15
 
-2024-4-1
+2026-4-1
 
 forked from [https://github.com/tengmaoqing/vite-plugin-qiankun](https://github.com/tengmaoqing/vite-plugin-qiankun)
