@@ -208,7 +208,7 @@ function module2DynamicImport(
   script$.removeAttr('type');
   const space = ident;
   script$.html(`
-${space}import(${normalizeUrl(moduleSrc + `?appName=${encodeURIComponent(appName)}}`, { changeScriptOrigin })} + \`&\${Date.now()}\`)`);
+${space}import(${normalizeUrl(moduleSrc + `?appName=${encodeURIComponent(appName)}`, { changeScriptOrigin })} + \`&\${Date.now()}\`)`);
 
   return script$;
 }
