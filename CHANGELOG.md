@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.1.1
+
+2024-4-29
+
+### Bug Fixes
+
+- Add client runtime timestamp to the entry script instead of a fixed server side timestamp.
+
 ## v2.1.0
 
 2024-4-29
