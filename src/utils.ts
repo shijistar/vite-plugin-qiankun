@@ -34,7 +34,7 @@ export function normalizeUrl(url: string | undefined, options?: { changeScriptOr
   const { changeScriptOrigin = true } = options ?? {};
   let appendBase = "''";
   if (changeScriptOrigin) {
-    appendBase = "window.proxy && window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
+    appendBase = "window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
   }
   return url?.match(/^https?/i) ? `'${url}'` : `(${appendBase}).replace(/\\/$/, '') + '${url}'`;
 }

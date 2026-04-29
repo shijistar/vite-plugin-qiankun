@@ -1,6 +1,6 @@
 {
   "name": "@tiny-codes/vite-plugin-qiankun",
-  "version": "2.1.2-beta.0",
+  "version": "2.1.2",
   "description": "Integrate qiankun micro-frontend framework with Vite 8+ applications",
   "keywords": [
     "vite",

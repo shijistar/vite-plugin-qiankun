@@ -1,5 +1,17 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.1.2
+
+2024-4-29
+
+### Feature
+
+- Remove `window.proxy` and use `window` instead, because window is already proxied inside scripts.
+
+### Bug Fixes
+
+- Remove an incorrect `}` symbol
+
 ## v2.1.1
 
 2024-4-29

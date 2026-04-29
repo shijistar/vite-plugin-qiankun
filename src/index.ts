@@ -57,15 +57,13 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
         });
         script$?.html(
           `${script$.html()?.trimEnd()}.then(() => {
-${S1}  if (window.proxy) {
-${S1}    const hooks = window.proxy[\`qiankunLifeCycles_${appName}\`];
-${S1}    if (hooks) {
-${S1}      window.proxy[\`qiankun_bootstrap_${appName}\`]((props) => hooks.bootstrap && hooks.bootstrap(props));
-${S1}      window.proxy[\`qiankun_mount_${appName}\`]((props) => hooks.mount && hooks.mount(props));
-${S1}      window.proxy[\`qiankun_unmount_${appName}\`]((props) => hooks.unmount && hooks.unmount(props));
-${S1}      window.proxy[\`qiankun_update_${appName}\`]((props) => hooks.update && hooks.update(props));
-${S1}      window.dispatchEvent(new CustomEvent('qiankun:loaded'));
-${S1}    }
+${S1}  const hooks = window[\`qiankunLifeCycles_${appName}\`];
+${S1}  if (hooks) {
+${S1}    window[\`qiankun_bootstrap_${appName}\`]((props) => hooks.bootstrap && hooks.bootstrap(props));
+${S1}    window[\`qiankun_mount_${appName}\`]((props) => hooks.mount && hooks.mount(props));
+${S1}    window[\`qiankun_unmount_${appName}\`]((props) => hooks.unmount && hooks.unmount(props));
+${S1}    window[\`qiankun_update_${appName}\`]((props) => hooks.update && hooks.update(props));
+${S1}    window.dispatchEvent(new CustomEvent('qiankun:loaded'));
 ${S1}  }
 ${S1}}).catch((error) => {
 ${S1}  console.error(error);
@@ -85,10 +83,8 @@ ${S0}`,
 ${B1}<script>
 ${B1}  const makeLifeCycle = (hookName) => {
 ${B1}    const p = new Promise((resolve, reject) => {
-${B1}      if (window.proxy) {
-${B1}        window.proxy[\`qiankun_\${hookName}_${appName}\`] = resolve;
-${B1}      }
-${B1}    })
+${B1}      window[\`qiankun_\${hookName}_${appName}\`] = resolve;
+${B1}    });
 ${B1}    return (props) => p.then(fn => fn(props));
 ${B1}  };
 ${B1}  window['${appName}'] = {
