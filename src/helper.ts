@@ -24,6 +24,17 @@ export const qiankunWindow: QiankunWindow = typeof window !== 'undefined' ? (win
 export const exportQiankunLifeCycles = (qiankunLifeCycle: QiankunLifeCycle) => {
   // The function has only one chance to execute, and the lifecycle needs to be assigned to the global scope.
   if (qiankunWindow?.__POWERED_BY_QIANKUN__) {
-    qiankunWindow.qiankunLifeCycles = qiankunLifeCycle;
+    let appName: string | undefined;
+    try {
+      appName = new URL(import.meta.url).searchParams.get('appName') ?? undefined;
+    } catch (error) {
+      // silent error
+    }
+    if (!appName) {
+      console.warn(
+        'Qiankun appName is not defined in the entry URL. To support multiple micro apps, please ensure the entry URL contains the appName query parameter.',
+      );
+    }
+    qiankunWindow[`qiankunLifeCycles_${appName}`] = qiankunLifeCycle;
   }
 };

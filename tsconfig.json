@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2016",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "lib": ["ES2016", "DOM"],
     "sourceMap": true,
     "sourceRoot": "../",

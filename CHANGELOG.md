@@ -1,5 +1,19 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.1.0
+
+2024-4-29
+
+### Features
+
+- Add `appName` to all internal global variables to support loading multiple micro apps simultaneously.
+- Mount the Qiankun lifecycle scripts to `window` and move them from `body` to `head` to ensure they are accessible before the entry file is loaded.
+
+### Internal Changes
+
+- The temporary methods mounted on `window.proxy` for passing lifecycle hooks have been renamed.
+- The internal naming of `window.proxy.qiankunLifeCycles` has been updated to include the application name, resulting in `window.proxy.qiankunLifeCycles_${appName}`.
+
 ## v2.0.6
 
 2024-4-28

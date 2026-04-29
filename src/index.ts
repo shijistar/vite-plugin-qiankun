@@ -39,6 +39,7 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
 
     transformIndexHtml(html: string, context) {
       const $ = load(html, { sourceCodeLocationInfo: true });
+
       // Transform entry script
       const entryScript =
         $('script[entry]').get(0) ?? $('body script[type=module], head script[crossorigin=""]').get(0);
@@ -50,18 +51,19 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
         const script$ = module2DynamicImport({
           $,
           scriptTag: entryScript,
+          appName,
           changeScriptOrigin,
           ident: S1,
         });
         script$?.html(
           `${script$.html()?.trimEnd()}.then(() => {
 ${S1}  if (window.proxy) {
-${S1}    const qiankunLifeCycle = window.proxy.qiankunLifeCycles;
-${S1}    if (qiankunLifeCycle) {
-${S1}      window.proxy.vpq_bootstrap((props) => qiankunLifeCycle.bootstrap && qiankunLifeCycle.bootstrap(props));
-${S1}      window.proxy.vpq_mount((props) => qiankunLifeCycle.mount && qiankunLifeCycle.mount(props));
-${S1}      window.proxy.vpq_unmount((props) => qiankunLifeCycle.unmount && qiankunLifeCycle.unmount(props));
-${S1}      window.proxy.vpq_update((props) => qiankunLifeCycle.update && qiankunLifeCycle.update(props));
+${S1}    const hooks = window.proxy[\`qiankunLifeCycles_${appName}\`];
+${S1}    if (hooks) {
+${S1}      window.proxy[\`qiankun_bootstrap_${appName}\`]((props) => hooks.bootstrap && hooks.bootstrap(props));
+${S1}      window.proxy[\`qiankun_mount_${appName}\`]((props) => hooks.mount && hooks.mount(props));
+${S1}      window.proxy[\`qiankun_unmount_${appName}\`]((props) => hooks.unmount && hooks.unmount(props));
+${S1}      window.proxy[\`qiankun_update_${appName}\`]((props) => hooks.update && hooks.update(props));
 ${S1}      window.dispatchEvent(new CustomEvent('qiankun:loaded'));
 ${S1}    }
 ${S1}  }
@@ -75,6 +77,33 @@ ${S1}  }
 ${S1}});
 ${S0}`,
         );
+
+        // Add extra script to export lifecycles
+        const bodyBaseIndent = detectIndent(html, $('head').get(0));
+        const B1 = bodyBaseIndent + space(2);
+        const mainModuleScript = `
+${B1}<script>
+${B1}  const makeLifeCycle = (hookName) => {
+${B1}    const p = new Promise((resolve, reject) => {
+${B1}      if (window.proxy) {
+${B1}        window.proxy[\`qiankun_\${hookName}_${appName}\`] = resolve;
+${B1}      }
+${B1}    })
+${B1}    return (props) => p.then(fn => fn(props));
+${B1}  };
+${B1}  window['${appName}'] = {
+${B1}    bootstrap: makeLifeCycle('bootstrap'),
+${B1}    mount: makeLifeCycle('mount'),
+${B1}    unmount: makeLifeCycle('unmount'),
+${B1}    update: makeLifeCycle('update')
+${B1}  };
+${B1}</script>
+${S0}`;
+        if (entryScript) {
+          $(mainModuleScript).insertBefore(entryScript);
+        } else {
+          $('head').append(mainModuleScript);
+        }
 
         // Transform modulepreload links
         const preloadLinks = $('link[rel="modulepreload"]');
@@ -127,27 +156,6 @@ ${R1}});`);
           }
         }
 
-        // Add extra script to export lifecycles
-        const bodyBaseIndent = detectIndent(html, $('body').get(0));
-        const B1 = bodyBaseIndent + space(2);
-        $('body').append(`
-${B1}<script>
-${B1}  const makeLifeCycle = (hookName) => {
-${B1}    const promise = new Promise((resolve, reject) => {
-${B1}      if (window.proxy) {
-${B1}        window.proxy[\`vpq_\${hookName}\`] = resolve;
-${B1}      }
-${B1}    })
-${B1}    return (props) => promise.then(fn => fn(props));
-${B1}  };
-${B1}  window['${appName}'] = {
-${B1}    bootstrap: makeLifeCycle('bootstrap'),
-${B1}    mount: makeLifeCycle('mount'),
-${B1}    unmount: makeLifeCycle('unmount'),
-${B1}    update: makeLifeCycle('update')
-${B1}  };
-${B1}</script>
-`);
         const output = $.html();
         return output;
       } else {
@@ -164,7 +172,12 @@ ${B1}</script>
           res.end = function (this: typeof res, chunk: unknown, ...rest: any[]) {
             if (typeof chunk === 'string') {
               const $ = load(chunk);
-              module2DynamicImport({ $, scriptTag: $(`script[src="${base}@vite/client"]`).get(0), changeScriptOrigin });
+              module2DynamicImport({
+                $,
+                appName,
+                scriptTag: $(`script[src="${base}@vite/client"]`).get(0),
+                changeScriptOrigin,
+              });
               chunk = $.html();
             }
             end(chunk, ...rest);
@@ -178,9 +191,14 @@ ${B1}</script>
 };
 
 function module2DynamicImport(
-  options: { $: CheerioAPI; scriptTag: Element | undefined; ident?: string } & Pick<MicroOption, 'changeScriptOrigin'>,
+  options: {
+    $: CheerioAPI;
+    scriptTag: Element | undefined;
+    ident?: string;
+    appName: string;
+  } & Pick<MicroOption, 'changeScriptOrigin'>,
 ) {
-  const { $, scriptTag, changeScriptOrigin, ident = '' } = options;
+  const { $, scriptTag, appName, changeScriptOrigin, ident = '' } = options;
   if (!scriptTag) {
     return;
   }
@@ -190,7 +208,8 @@ function module2DynamicImport(
   script$.removeAttr('type');
   const space = ident;
   script$.html(`
-${space}import(${normalizeUrl(moduleSrc + `?${Date.now()}`, { changeScriptOrigin })})`);
+${space}import(${normalizeUrl(moduleSrc + `?appName=${encodeURIComponent(appName)}&${Date.now()}`, { changeScriptOrigin })})`);
+
   return script$;
 }
 
