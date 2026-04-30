@@ -1,5 +1,13 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## UNRELEASED
+
+2026-?-?
+
+### Feature
+
+- Improve the format of preload modules code
+
 ## v2.2.0
 
 2026-4-30

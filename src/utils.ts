@@ -31,10 +31,15 @@ export function space(num: number) {
 }
 
 export function normalizeUrl(url: string | undefined, options?: { changeScriptOrigin?: boolean }) {
+  const prefix = getUrlPrefix(options);
+  return url?.match(/^https?/i) ? `'${url}'` : `${prefix} + '${url}'`;
+}
+
+export function getUrlPrefix(options?: { changeScriptOrigin?: boolean }) {
   const { changeScriptOrigin = true } = options ?? {};
-  let appendBase = "''";
+  let prefix = "''";
   if (changeScriptOrigin) {
-    appendBase = "window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || ''";
+    prefix = "(window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || '').replace(/\\/$/, '')";
   }
-  return url?.match(/^https?/i) ? `'${url}'` : `(${appendBase}).replace(/\\/$/, '') + '${url}'`;
+  return prefix;
 }

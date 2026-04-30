@@ -2,7 +2,7 @@ import type { CheerioAPI } from 'cheerio';
 import { load } from 'cheerio';
 import type { Element } from 'domhandler';
 import type { PluginOption } from 'vite';
-import { detectIndent, normalizeUrl, space } from './utils';
+import { detectIndent, getUrlPrefix, normalizeUrl, space } from './utils';
 
 export * from './client';
 
@@ -110,18 +110,25 @@ ${S0}`;
         if (preloadLinks.length) {
           const urls = preloadLinks.map((_, link) => $(link).attr('href')).get();
           const P1 = detectIndent(html, preloadLinks.get(0));
+          const prefixContent = urls.every((url) => url?.match(/^https?/i))
+            ? ''
+            : `
+${P1}    const prefix = ${getUrlPrefix({ changeScriptOrigin })};`;
+
           preloadLinks.last().after(`
 ${P1}<script>
-${P1}  const preloadUrls = [
-${urls.map((url) => `${P1}    ${normalizeUrl(url, { changeScriptOrigin })}`).join(',\n')}
-${P1}  ];
-${P1}  preloadUrls.forEach((url) => {
-${P1}    const link = document.createElement('link');
-${P1}    link.rel = 'modulepreload';
-${P1}    link.href = url;
-${P1}    link.crossOrigin = 'anonymous';
-${P1}    document.head.appendChild(link);
-${P1}  });
+${P1}  (() => {${prefixContent}
+${P1}    const preloadUrls = [
+${urls.map((url) => `${P1}      ${url?.match(/^https?/i) ? `'${url}'` : `\`\${prefix}${url}\``}`).join(',\n')}
+${P1}    ];
+${P1}    for (const url of preloadUrls) {
+${P1}      const link = document.createElement('link');
+${P1}      link.rel = 'modulepreload';
+${P1}      link.href = url;
+${P1}      link.crossOrigin = 'anonymous';
+${P1}      document.head.appendChild(link);
+${P1}    }
+${P1}  })();
 ${P1}</script>`);
           const texts = preloadLinks.map((_, link) => (link.next?.type === 'text' ? link.next : null));
           texts.remove();
