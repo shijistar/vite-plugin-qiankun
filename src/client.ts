@@ -4,6 +4,7 @@ export interface QiankunProps {
 }
 
 export interface QiankunLifeCycle {
+  name?: string;
   bootstrap?: (props?: QiankunProps) => void | Promise<void>;
   mount?: (props: QiankunProps) => void | Promise<void>;
   unmount?: (props: QiankunProps) => void | Promise<void>;
@@ -24,17 +25,20 @@ export const qiankunWindow: QiankunWindow = typeof window !== 'undefined' ? (win
 export const exportQiankunLifeCycles = (qiankunLifeCycle: QiankunLifeCycle) => {
   // The function has only one chance to execute, and the lifecycle needs to be assigned to the global scope.
   if (qiankunWindow?.__POWERED_BY_QIANKUN__) {
-    let appName: string | undefined;
+    const { name, ...rest } = qiankunLifeCycle;
+    let appName: string | undefined = name;
     try {
-      appName = new URL(import.meta.url).searchParams.get('appName') ?? undefined;
+      if (!appName) {
+        appName = new URL(import.meta.url).searchParams.get('appName') ?? undefined;
+      }
     } catch (error) {
       // silent error
     }
     if (!appName) {
       console.warn(
-        'Qiankun appName is not defined in the entry URL. To support multiple micro apps, please ensure the entry URL contains the appName query parameter.',
+        'Qiankun appName is not defined. Please ensure the appName is specified either in the `qiankunLifeCycle.name` parameter or in the entry URL.',
       );
     }
-    qiankunWindow[`qiankunLifeCycles_${appName}`] = qiankunLifeCycle;
+    qiankunWindow[`qiankunLifeCycles_${appName}`] = rest;
   }
 };

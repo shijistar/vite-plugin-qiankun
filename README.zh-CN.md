@@ -90,6 +90,7 @@ const root = createRoot(container!);
 
 if (qiankunWindow.__POWERED_BY_QIANKUN__) {
   exportQiankunLifeCycles({
+    name: 'subApp', // [optional]
     bootstrap(props) {
       console.log('bootstrap', props);
     },
@@ -97,8 +98,8 @@ if (qiankunWindow.__POWERED_BY_QIANKUN__) {
       console.log('mount', props);
       root.render(<App />);
     },
-    unmount(props) {
-      console.log('unmount', props);
+    unmount() {
+      console.log('unmount');
       root.unmount();
     },
     update(props) {
@@ -115,6 +116,8 @@ if (qiankunWindow.__POWERED_BY_QIANKUN__) {
 - 独立运行时，应用按普通 Vite 项目方式启动
 - 作为 qiankun 子应用运行时，通过 `exportQiankunLifeCycles` 向运行时导出生命周期
 - 通过 `qiankunWindow.__POWERED_BY_QIANKUN__` 判断当前是否处于微前端上下文
+
+注意，`name` 在生产模式下是可选的，因为会自动从入口文件url中获取。但如果你希望在子应用的开发模式下进行调试，你需要显式指定 `name`，与`vite.config.ts` 中调用 `qiankun('subApp')` 时的名称保持一致。
 
 ### 3. 在主应用中注册并加载子应用
 

@@ -92,6 +92,7 @@ const root = createRoot(container!);
 
 if (qiankunWindow.__POWERED_BY_QIANKUN__) {
   exportQiankunLifeCycles({
+    name: 'subApp', // [optional]
     bootstrap(props) {
       console.log('bootstrap', props);
     },
@@ -117,6 +118,8 @@ The important parts are:
 - When running standalone, the app starts like a regular Vite project
 - When running inside qiankun, the app exposes lifecycles through `exportQiankunLifeCycles`
 - `qiankunWindow.__POWERED_BY_QIANKUN__` tells you whether the app is running in a micro frontend context
+
+Note that `name` is optional in production mode, as it can be automatically inferred from the entry file URL. However, if you want to debug the sub app in development mode, you need to explicitly specify the `name`, which should match the name used in `vite.config.ts` when calling `qiankun('subApp')`.
 
 ### 3. Register and load the micro app in the host application
 

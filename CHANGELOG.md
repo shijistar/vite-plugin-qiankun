@@ -1,11 +1,12 @@
 # @tiny-codes/vite-plugin-qiankun
 
-## UNRELEASED
+## v2.2.1
 
-2026-?-?
+2026-5-11
 
 ### Feature
 
+- Add `name` parameter to `exportQiankunLifeCycles` to run micro apps in debug mode.
 - Improve the format of preload modules code
 
 ## v2.2.0
