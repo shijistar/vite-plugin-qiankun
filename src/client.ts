@@ -4,6 +4,12 @@ export interface QiankunProps {
 }
 
 export interface QiankunLifeCycle {
+  /**
+   * The name of the micro app. It is optional in production mode, as it can be automatically
+   * inferred from the entry file URL. However, if you want to debug the sub app in development
+   * mode, you need to explicitly specify the `name`, which should match the name used in
+   * `vite.config.ts` when calling `qiankun('subApp')`.
+   */
   name?: string;
   bootstrap?: (props?: QiankunProps) => void | Promise<void>;
   mount?: (props: QiankunProps) => void | Promise<void>;
