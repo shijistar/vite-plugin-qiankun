@@ -51,7 +51,6 @@ const qiankunPlugin: PluginFn = (appName, pluginOptions = {}) => {
         const script$ = module2DynamicImport({
           $,
           scriptTag: entryScript,
-          appName,
           changeScriptOrigin,
           ident: S1,
         });
@@ -181,7 +180,6 @@ ${R1}});`);
               const $ = load(chunk);
               module2DynamicImport({
                 $,
-                appName,
                 scriptTag: $(`script[src="${base}@vite/client"]`).get(0),
                 changeScriptOrigin,
               });
@@ -202,10 +200,9 @@ function module2DynamicImport(
     $: CheerioAPI;
     scriptTag: Element | undefined;
     ident?: string;
-    appName: string;
   } & Pick<MicroOption, 'changeScriptOrigin'>,
 ) {
-  const { $, scriptTag, appName, changeScriptOrigin, ident = '' } = options;
+  const { $, scriptTag, changeScriptOrigin, ident = '' } = options;
   if (!scriptTag) {
     return;
   }
@@ -215,7 +212,7 @@ function module2DynamicImport(
   script$.removeAttr('type');
   const space = ident;
   script$.html(`
-${space}import(${normalizeUrl(moduleSrc + `?appName=${encodeURIComponent(appName)}`, { changeScriptOrigin })} + \`&\${Date.now()}\`)`);
+${space}import(${normalizeUrl(moduleSrc, { changeScriptOrigin })})`);
 
   return script$;
 }

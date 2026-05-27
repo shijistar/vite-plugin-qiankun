@@ -5,12 +5,10 @@ export interface QiankunProps {
 
 export interface QiankunLifeCycle {
   /**
-   * The name of the micro app. It is optional in production mode, as it can be automatically
-   * inferred from the entry file URL. However, if you want to debug the sub app in development
-   * mode, you need to explicitly specify the `name`, which should match the name used in
-   * `vite.config.ts` when calling `qiankun('subApp')`.
+   * The name of the micro app. It should match the name used in `vite.config.ts` when calling
+   * `qiankun('xxx')`.
    */
-  name?: string;
+  name: string;
   bootstrap?: (props?: QiankunProps) => void | Promise<void>;
   mount?: (props: QiankunProps) => void | Promise<void>;
   unmount?: (props: QiankunProps) => void | Promise<void>;
@@ -32,19 +30,11 @@ export const exportQiankunLifeCycles = (qiankunLifeCycle: QiankunLifeCycle) => {
   // The function has only one chance to execute, and the lifecycle needs to be assigned to the global scope.
   if (qiankunWindow?.__POWERED_BY_QIANKUN__) {
     const { name, ...rest } = qiankunLifeCycle;
-    let appName: string | undefined = name;
-    try {
-      if (!appName) {
-        appName = new URL(import.meta.url).searchParams.get('appName') ?? undefined;
-      }
-    } catch (error) {
-      // silent error
-    }
-    if (!appName) {
-      console.warn(
-        'Qiankun appName is not defined. Please ensure the appName is specified either in the `qiankunLifeCycle.name` parameter or in the entry URL.',
+    if (!name) {
+      throw new Error(
+        "Qiankun appName is not provided. It should match the name used in `vite.config.ts` when calling `qiankun('xxx')`.",
       );
     }
-    qiankunWindow[`qiankunLifeCycles_${appName}`] = rest;
+    qiankunWindow[`qiankunLifeCycles_${name}`] = rest;
   }
 };
