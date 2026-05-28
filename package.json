@@ -1,15 +1,13 @@
 {
   "name": "@tiny-codes/vite-plugin-qiankun",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Integrate qiankun micro-frontend framework with Vite 8+ applications",
   "keywords": [
     "vite",
     "vite-plugin",
     "qiankun",
     "micro-frontend",
-    "SPA",
-    "esm",
-    "esModule"
+    "SPA"
   ],
   "homepage": "https://github.com/shijistar/vite-plugin-qiankun",
   "bugs": {
@@ -22,6 +20,27 @@
   "license": "MIT",
   "author": "李凤宝(Leo) <shijistar@gmail.com>",
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./es/index.js",
+      "require": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/client.d.ts",
+      "import": "./es/client.js",
+      "require": "./lib/client.js",
+      "default": "./lib/client.js"
+    },
+    "./version": {
+      "types": "./lib/version.d.ts",
+      "import": "./es/version.js",
+      "require": "./lib/version.js",
+      "default": "./lib/version.js"
+    },
+    "./package.json": "./package.json"
+  },
   "main": "lib/index.js",
   "module": "es/index.js",
   "types": "lib/index.d.ts",
@@ -34,11 +53,12 @@
     "README.zh-CN.md"
   ],
   "scripts": {
-    "build": "run-s build-task",
+    "build": "run-s gv build-task task:add-es-extensions",
     "build-task": "father build",
     "example:install": "cd example/main && npm install && cd ../viteapp && npm install && cd ../vue && npm install && cd ../react18 && npm install && cd ../vue3sub && npm install",
     "example:start": "npm run build && cd example/viteapp && npm run build && cd ../../ && npm-run-all --parallel start:main start:viteapp start:vue start:react18dev start:vue3sub",
     "example:start-vite-dev": "npm run build && npm-run-all --parallel start:main start:vitedev start:vue start:react18dev start:vue3sub",
+    "gv": "node scripts/generate-version.js",
     "init-husky": "husky",
     "prepare": "run-s init-husky",
     "prepublishOnly": "run-s build",
@@ -48,6 +68,7 @@
     "start:vitedev": "cd example/viteapp && npm run dev",
     "start:vue": "cd example/vue && npm run start",
     "start:vue3sub": "cd example/vue3sub && npm run dev",
+    "task:add-es-extensions": "tsx scripts/add-esm-extensions.ts es",
     "vite:test": "npm run build && cd example/viteapp && npm run dev"
   },
   "dependencies": {

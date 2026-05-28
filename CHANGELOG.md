@@ -1,5 +1,19 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.2.2
+
+2026-5-28
+
+### Feature
+
+- Improve package exports for modern Node.js runtimes and bundlers by adding explicit `import` / `require` / `default` entry mappings.
+
+### Internal Changes
+
+- Export the client runtime from the main entry to make subpath usage easier in ESM environments.
+- Add a post-build script to append `.js` extensions to ESM output imports.
+- Add a version generation script to keep `src/version.ts` synchronized with `package.json`.
+
 ## v2.2.1
 
 2026-5-11
