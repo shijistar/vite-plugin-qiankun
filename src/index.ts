@@ -6,6 +6,8 @@ import { detectIndent, getUrlPrefix, normalizeUrl, space } from './utils';
 
 export * from './client';
 
+export { version } from './version';
+
 export interface MicroOption {
   /**
    * Whether to change the origin of entry script tag for micro frontend. It's useful when the micro

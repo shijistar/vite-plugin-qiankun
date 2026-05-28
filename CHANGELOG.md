@@ -1,5 +1,19 @@
 # @tiny-codes/vite-plugin-qiankun
 
+## v2.4.0
+
+2026-5-28
+
+### Feature
+
+- Improve package exports for modern Node.js runtimes and bundlers by adding explicit `import` / `require` / `default` entry mappings.
+
+### Internal Changes
+
+- Export the client runtime from the main entry to make subpath usage easier in ESM environments.
+- Add a post-build script to append `.js` extensions to ESM output imports.
+- Add a version generation script to keep `src/version.ts` synchronized with `package.json`.
+
 ## v2.3.0
 
 2026-5-27
@@ -15,12 +29,19 @@
 >
 > In this version, we removed the approach of adding a dynamic `appName` parameter to the entry file. Instead, the `name` parameter must be explicitly provided when calling `exportQiankunLifeCycles`, ensuring that the micro app works correctly both independently and as a qiankun micro app.
 
-<!-- > 在之前的版本中，是通过给入口文件添加一个动态的`appName`参数来实现的，但这样做存在一些问题,
->
-> 1. 如果子应用是debug模式启动的，则appName可能无法传递到`exportQiankunLifeCycles`方法中，如果希望支持本地调试子应用，那就不得不还是需要设置`exportQiankunLifeCycles#name`
-> 2. 另外一个问题是，对于某些模块比较多的子应用，可能会出现循环引用的情况，即某些chunk会再次引用入口chunk，但这种引用方式是不带任何后缀的，这两个会被浏览器当做两个不同的模块。所以，在单独运行子应用时（即不作为qiankun子应用时），可能会导致一些意料之外的问题。
->
-> 所以，在这个版本中，我们去掉了给入口文件添加动态`appName`参数的做法，改为在调用`exportQiankunLifeCycles`时必须显式提供`name`参数，确保独立运行和作为qiankun子应用时都可以正常工作。 -->
+## v2.2.2
+
+2026-5-28
+
+### Feature
+
+- Improve package exports for modern Node.js runtimes and bundlers by adding explicit `import` / `require` / `default` entry mappings.
+
+### Internal Changes
+
+- Export the client runtime from the main entry to make subpath usage easier in ESM environments.
+- Add a post-build script to append `.js` extensions to ESM output imports.
+- Add a version generation script to keep `src/version.ts` synchronized with `package.json`.
 
 ## v2.2.1
 
